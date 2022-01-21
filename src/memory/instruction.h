@@ -32,7 +32,3 @@ typedef struct INSTRUCT_STRUCT
     od_t src;
     od_t dst;
 } inst_t;
-
-#define MM_LEN 1000
-
-uint8_t mm[MM_LEN];
