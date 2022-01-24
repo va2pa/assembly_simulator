@@ -1,3 +1,6 @@
+#ifndef inst_guard
+#define inst_guard
+
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -41,8 +44,13 @@ typedef struct INSTRUCT_STRUCT
     char code[100];
 } inst_t;
 
-void instruct_cycle();
-
 typedef void (*handler_t)(uint64_t, uint64_t);
 
 handler_t handler_table[NUM_INSTRTYPE];
+
+void instruct_cycle();
+
+void init_handler_table();
+void mov_reg_reg_handler(uint64_t src, uint64_t dst);
+void call_handler(uint64_t src, uint64_t dst);
+#endif
