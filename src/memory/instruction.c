@@ -1,4 +1,6 @@
+#include <stdio.h>
 #include "memory/instruction.h"
+#include "dram.h"
 #include "cpu/mmu.h"
 #include "cpu/register.h"
 
@@ -58,14 +60,16 @@ static uint64_t decode_od(od_t od)
 }
 
 void instruct_cycle(){
-    //取指令
+    // 取指
     inst_t *inst = (inst_t *)reg.rip;
     reg.rip += sizeof(inst_t);
-    //译码
+
+    printf("    %s\n",inst->code);
+    // 译码
     op_t op = inst -> op;
-    uint64_t src = decode_od(inst -> src);
-    uint64_t dst = decode_od(inst -> dst);
-    //执行
+    uint64_t src = decode_od(inst->src);
+    uint64_t dst = decode_od(inst->dst);
+    // 执行
     handler_table[op](src, dst);
 }
 
@@ -75,9 +79,17 @@ void init_handler_table(){
 }
 
 void mov_reg_reg_handler(uint64_t src, uint64_t dst){
-    
+    // src: reg
+    // dst: reg
+    *(uint64_t *)dst = *(uint64_t *)src;
 }
 
 void call_handler(uint64_t src, uint64_t dst){
-    
+    // src: imm
+    reg.rsp -= 8;       // 8Bytes == 64bits
+    write64bits_dram(
+        va2pa(reg.rsp),
+        reg.rip         // 取指阶段已经指向下一条指令地址
+    );
+    reg.rip = src;
 }

@@ -27,10 +27,14 @@ int main()
     write64bits_dram(va2pa(0x7fffffffe3f8), 0x12340000);
     write64bits_dram(va2pa(0x7fffffffe3f0), 0x555555554660);    //rsp
     
+    print_register();
+    print_stack();
 
     // instruct_cycle
-    for(int i = 0;i < 0;i++){
+    for(int i = 0;i < 3;i++){
         instruct_cycle();
+        print_register();
+        print_stack(); 
     }
 
     // verify
