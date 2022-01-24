@@ -1,16 +1,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define NUM_INSTRTYPE 30
+
 typedef enum OP
 {
     mov_reg_reg,
-    call,
-    push_reg,
     mov_reg_mem,
     mov_mem_reg,
     add_reg_reg,
+    call,
+    push_reg,
     pop_reg,
-    sub_imm_reg,
     ret
 } op_t;
 
@@ -42,4 +43,6 @@ typedef struct INSTRUCT_STRUCT
 
 void instruct_cycle();
 
-void (*handler_table[30])(uint64_t, uint64_t);
+typedef void (*handler_t)(uint64_t, uint64_t);
+
+handler_t handler_table[NUM_INSTRTYPE];
