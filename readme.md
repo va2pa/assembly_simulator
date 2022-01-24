@@ -26,4 +26,6 @@
 
 #ifndef #define #endif:防止头文件重复引入
 
-#### 2022/1/24 编写调试函数print_register()、print_stack()，实现指令处理函数mov_reg_reg_handler()、call_handler()
+#### 2022/1/24 编写调试函数print_register()、print_stack()，实现指令处理mov_reg_reg、call
+
+#### 2022/1/24 实现add.c其余指令push_reg、mov_reg_mem、mov_mem_reg、add_reg_reg、pop_reg、ret，完成add.c简易的instruction_cycle()模拟

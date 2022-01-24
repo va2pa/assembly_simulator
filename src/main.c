@@ -31,22 +31,22 @@ int main()
     print_stack();
 
     // instruct_cycle
-    for(int i = 0;i < 3;i++){
-        instruct_cycle();
+    for(int i = 0;i < 15;i++){
+        instruction_cycle();
         print_register();
         print_stack(); 
     }
 
     // verify
     int match = 1;
-    match = match && (reg.rax = 0x1234abcd);
-    match = match && (reg.rbx = 0x0);
-    match = match && (reg.rcx = 0x555555554660);
-    match = match && (reg.rdx = 0x12340000);
-    match = match && (reg.rsi = 0xabcd);
-    match = match && (reg.rdi = 0x12340000);
-    match = match && (reg.rbp = 0x7fffffffe410);
-    match = match && (reg.rsp = 0x7fffffffe3f0);
+    match = match && (reg.rax == 0x1234abcd);
+    match = match && (reg.rbx == 0x0);
+    match = match && (reg.rcx == 0x555555554660);
+    match = match && (reg.rdx == 0x12340000);
+    match = match && (reg.rsi == 0xabcd);
+    match = match && (reg.rdi == 0x12340000);
+    match = match && (reg.rbp == 0x7fffffffe410);
+    match = match && (reg.rsp == 0x7fffffffe3f0);
     if(match){
         printf("register match\n");
     }else{
