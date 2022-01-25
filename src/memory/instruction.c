@@ -8,7 +8,7 @@ static uint64_t decode_od(od_t od)
 {
     if(od.type == IMM)
     {
-        //返回内存布局的uint64_t形式
+        //返回内存布局
         return *((uint64_t *)&od.imm);
     }
     else if(od.type == REG)

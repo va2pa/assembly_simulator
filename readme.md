@@ -29,3 +29,5 @@
 #### 2022/1/24 编写调试函数print_register()、print_stack()，实现指令处理mov_reg_reg、call
 
 #### 2022/1/24 实现add.c其余指令push_reg、mov_reg_mem、mov_mem_reg、add_reg_reg、pop_reg、ret，完成add.c简易的instruction_cycle()模拟
+
+#### 2022/1/25 修改注释：有符号数的存储形式是其补码，其无符号形式就是它的01内存布局
