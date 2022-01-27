@@ -204,6 +204,6 @@ uint64_t ACTIVE_CORE;
 
 void instruction_cycle(core_t *cr);
 
-uint64_t va2pa(uint64_t vaddr, core *cr);
+uint64_t va2pa(uint64_t vaddr, core_t *cr);
 
 #endif
