@@ -174,6 +174,22 @@ typedef struct REGISTER_STRUCT
     };
 } reg_t;
 
+typedef struct CPU_FLAGS
+{
+    union
+    {
+        uint64_t flags_value;
+        // carry flag(进位标志): detect overflow for unsigned operations
+        uint16_t CF;
+        // zero flag: result is zero
+        uint16_t ZF;
+        // sign flag: result is negative: highest bit
+        uint16_t SF;
+        // overflow flag: detect overflow for signed operations
+        uint16_t OF;
+    };
+}cpu_flags_t;
+
 typedef struct CORE_STRUCT
 {
     union 
@@ -184,14 +200,7 @@ typedef struct CORE_STRUCT
 
     reg_t reg;
 
-    // carry flag(进位标志): detect overflow for unsigned operations
-    uint32_t CF;
-    // zero flag: result is zero
-    uint32_t ZF;
-    // sign flag: result is negative: highest bit
-    uint32_t SF;
-    // overflow flag: detect overflow for signed operations
-    uint32_t OF;
+    cpu_flags_t flags;
 }core_t;
 
 #define NUM_CORES 1

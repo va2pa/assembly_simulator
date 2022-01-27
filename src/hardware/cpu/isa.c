@@ -52,6 +52,7 @@ typedef struct INST_STRUCT
     od_t dst;
 }inst_t;
 
+static uint64_t parse_register(const char *str, core_t *cr);
 static void parse_operand(const char *str, od_t *od, core_t *cr);
 static void parse_instruction(const char *str, inst_t *inst, core_t *cr);
 static uint64_t decode_operand(od_t *od);
@@ -109,7 +110,171 @@ static uint64_t decode_operand(od_t *od){
     }
 }
 
-static void parse_operand(const char *str, od_t *od, core_t *cr)
+static const char *reg_name_list[72] = {
+    "%rax","%eax","%ax","%ah","%al",
+    "%rbx","%ebx","%bx","%bh","%bl",
+    "%rcx","%ecx","%cx","%ch","%cl",
+    "%rdx","%edx","%dx","%dh","%dl",
+    "%rsi","%esi","%si","%sih","%sil",
+    "%rdi","%edi","%di","%dih","%dil",
+    "%rbp","%ebp","%bp","%bph","%bpl",
+    "%rsp","%esp","%sp","%sph","%spl",
+    "%r8","%r8d","%r8w","%r8b",
+    "%r9","%r9d","%r9w","%r9b",
+    "%r10","%r10d","%r10w","%r10b",
+    "%r11","%r11d","%r11w","%r11b",
+    "%r12","%r12d","%r12w","%r12b",
+    "%r13","%r13d","%r13w","%r13b",
+    "%r14","%r14d","%r14w","%r14b",
+    "%r15","%r15d","%r15w","%r15b",
+};
+
+static uint64_t parse_register(const char *str, core_t *cr)
+{
+    reg_t *reg = &(cr->reg);
+    uint64_t reg_addr[72] = {
+        (uint64_t)&(reg->rax),(uint64_t)&(reg->eax),(uint64_t)&(reg->ax),(uint64_t)&(reg->ah),(uint64_t)&(reg->al),
+        (uint64_t)&(reg->rbx),(uint64_t)&(reg->ebx),(uint64_t)&(reg->bx),(uint64_t)&(reg->bh),(uint64_t)&(reg->bl),
+        (uint64_t)&(reg->rcx),(uint64_t)&(reg->ecx),(uint64_t)&(reg->cx),(uint64_t)&(reg->ch),(uint64_t)&(reg->cl),
+        (uint64_t)&(reg->rdx),(uint64_t)&(reg->edx),(uint64_t)&(reg->dx),(uint64_t)&(reg->dh),(uint64_t)&(reg->dl),
+        (uint64_t)&(reg->rsi),(uint64_t)&(reg->esi),(uint64_t)&(reg->si),(uint64_t)&(reg->sih),(uint64_t)&(reg->sil),
+        (uint64_t)&(reg->rdi),(uint64_t)&(reg->edi),(uint64_t)&(reg->di),(uint64_t)&(reg->dih),(uint64_t)&(reg->dil),
+        (uint64_t)&(reg->rbp),(uint64_t)&(reg->ebp),(uint64_t)&(reg->bp),(uint64_t)&(reg->bph),(uint64_t)&(reg->bpl),
+        (uint64_t)&(reg->rsp),(uint64_t)&(reg->esp),(uint64_t)&(reg->sp),(uint64_t)&(reg->sph),(uint64_t)&(reg->spl),
+        (uint64_t)&(reg->r8),(uint64_t)&(reg->r8d),(uint64_t)&(reg->r8w),(uint64_t)&(reg->r8b),
+        (uint64_t)&(reg->r9),(uint64_t)&(reg->r9d),(uint64_t)&(reg->r9w),(uint64_t)&(reg->r9b),
+        (uint64_t)&(reg->r10),(uint64_t)&(reg->r10d),(uint64_t)&(reg->r10w),(uint64_t)&(reg->r10b),
+        (uint64_t)&(reg->r11),(uint64_t)&(reg->r11d),(uint64_t)&(reg->r11w),(uint64_t)&(reg->r11b),
+        (uint64_t)&(reg->r12),(uint64_t)&(reg->r12d),(uint64_t)&(reg->r12w),(uint64_t)&(reg->r12b),
+        (uint64_t)&(reg->r13),(uint64_t)&(reg->r13d),(uint64_t)&(reg->r13w),(uint64_t)&(reg->r13b),
+        (uint64_t)&(reg->r14),(uint64_t)&(reg->r14d),(uint64_t)&(reg->r14w),(uint64_t)&(reg->r14b),
+        (uint64_t)&(reg->r15),(uint64_t)&(reg->r15d),(uint64_t)&(reg->r15w),(uint64_t)&(reg->r15b),
+    };
+    for(int i = 0;i < 72;i++)
+    {
+        if(strcmp(str, reg_name_list[i]) == 0)
+        {
+            return reg_addr[i];
+        }
+    }
+    printf("parse register %s error\n", str);
+    exit(0);
+}
+
+static void parse_mem_addr(const char *str, od_t *od, core_t *cr)
+{
+    int str_len = strlen(str);
+    char imm[64] = {'\0'};
+    int imm_len = 0;
+    char reg1[64] = {'\0'};
+    int reg1_len = 0;
+    char reg2[64] = {'\0'};
+    int reg2_len = 0;
+    char scal[64] = {'\0'};
+    int scal_len = 0;
+
+    int ca = 0;     //()
+    int cb = 0;     //,
+    for(int i = 0; i < str_len; i++){
+        if(str[i] == '(' || str[i] == ')')
+        {
+            ca++;
+        }
+        else if(str[i] == ',')
+        {
+            cb++;
+        }
+        else
+        {
+            if(ca == 0 && cb == 0)
+            {
+                imm[imm_len++] = str[i];
+            }
+            else if(ca == 1 && cb == 0)
+            {
+                reg1[reg1_len++] = str[i];
+            }
+            else if(ca == 1 && cb == 1)
+            {
+                reg2[reg2_len++] = str[i];
+            }
+            else if(ca == 1 && cb == 2)
+            {
+                scal[scal_len++] = str[i];
+            }
+        }
+    }
+    if(imm_len > 0)
+    {
+        od->imm = string2uint(imm);
+    }
+    if(scal_len > 0)
+    {
+        od->scal = string2uint(scal);
+    }
+    if(reg1_len > 0)
+    {
+        od->reg1 = parse_register(reg1, cr);
+    }
+    if(reg2_len > 0)
+    {
+        od->reg2 = parse_register(reg2, cr);
+    }
+    //确定类型
+    if(cb == 0)
+    {
+        if(ca == 0)
+        {
+            od->type = MM_IMM;
+        }
+        else if(imm_len == 0)
+        {
+            od->type = MM_REG1;
+        }
+        else
+        {
+            od->type = MM_IMM_REG1;
+        }
+    }
+    else if(cb == 1)
+    {
+        if(imm_len == 0)
+        {
+            od->type = MM_REG1_REG2;
+        }
+        else
+        {
+            od->type = MM_IMM_REG1_REG2;
+        }
+    }
+    else if(cb == 2)
+    {
+        if(reg1_len == 0)
+        {
+            if(imm_len == 0)
+            {
+                od->type = MM_REG2_SCAL;
+            }
+            else
+            {
+                od->type = MM_IMM_REG2_SCAL;
+            }
+        }
+        else
+        {
+            if(imm_len == 0)
+            {
+                od->type = MM_REG1_REG2_SCAL;
+            }
+            else
+            {
+                od->type = MM_IMM_REG1_REG2_SCAL;
+            }
+        }
+    }
+}
+
+void parse_operand(const char *str, od_t *od, core_t *cr)
 {
     od->type = EMPTY;
     od->imm = 0;
@@ -125,17 +290,20 @@ static void parse_operand(const char *str, od_t *od, core_t *cr)
 
     if(str[0] == '$')
     {
+        // imm
         od->type = IMM;
         od->imm = string2uint_range(str, 1, -1);
-
     }
     else if(str[0] == '%')
     {
-
+        // reg
+        od->type = REG;
+        od->reg1 = parse_register(str, cr);
     }
     else
     {
-
+        // mem
+        parse_mem_addr(str, od, cr);
     }
 }
 
@@ -174,10 +342,7 @@ static handler_t handler_table[NUM_INSTRTYPE] = {
 
 static inline void reset_cflags(core_t *cr)
 {
-    cr->CF = 0;
-    cr->ZF = 0;
-    cr->SF = 0;
-    cr->OF = 0;
+    cr->flags.flags_value = 0;
 }
 
 
@@ -331,7 +496,7 @@ void print_register(core_t *cr)
         reg.rsi, reg.rdi, reg.rbp, reg.rsp);
     printf("rip = %16lx\n", cr->rip);
     printf("CF = %u\tZF = %u\tSF = %u\tOF = %u\n",
-        cr->CF, cr->ZF, cr->SF, cr->OF);
+        cr->flags.CF, cr->flags.ZF, cr->flags.SF, cr->flags.OF);
 }
 
 void print_stack(core_t *cr)
@@ -359,3 +524,40 @@ void print_stack(core_t *cr)
         va -= 8;
     }
 }
+
+void TestParsingOperand()
+{
+    ACTIVE_CORE = 0x0;    
+    core_t *ac = (core_t *)&cores[ACTIVE_CORE];
+
+    const char *strs[11] = {
+        "$0x1234",
+        "%rax",
+        "0xabcd",
+        "(%rsp)",
+        "0xabcd(%rsp)",
+        "(%rsp,%rbx)",
+        "0xabcd(%rsp,%rbx)",
+        "(,%rbx,8)",
+        "0xabcd(,%rbx,8)",
+        "(%rsp,%rbx,8)",
+        "0xabcd(%rsp,%rbx,8)",
+    };
+
+    printf("rax %p\n", &(ac->reg.rax));
+    printf("rsp %p\n", &(ac->reg.rsp));
+    printf("rbx %p\n", &(ac->reg.rbx));
+
+    for (int i = 0; i < 11; ++ i)
+    {
+        od_t od;
+        parse_operand(strs[i], &od, ac);
+
+        printf("\n%s\n", strs[i]);
+        printf("od enum type: %d\n", od.type);
+        printf("od imm: %lx\n", od.imm);
+        printf("od reg1: %lx\n", od.reg1);
+        printf("od reg2: %lx\n", od.reg2);
+        printf("od scal: %lx\n", od.scal);
+    }
+} 

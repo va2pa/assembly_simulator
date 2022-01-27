@@ -8,13 +8,14 @@
 
 static void TestAddFunctionCallAndComputation();
 static void TestString2Uint();
+void TestParsingOperand();
 
 void print_register(core_t *cr);
 void print_stack(core_t *cr);
 
 int main()
 {
-    TestString2Uint();
+    TestParsingOperand();
     return 0;
 }
 
