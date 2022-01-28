@@ -5,7 +5,7 @@
 #include<headers/memory.h>
 #include<headers/common.h>
 
-typedef enum INST_OPERATOR
+typedef enum OPERATOR
 {
     MOV,
     PUSH,
@@ -45,16 +45,19 @@ typedef struct OPERAND_STRUCT
     uint64_t reg2;
 }od_t;
 
-typedef struct INST_STRUCT
+typedef struct STRUCT
 {
     op_t op;
     od_t src;
     od_t dst;
 }inst_t;
 
+static void parse_mem_addr(const char *str, od_t *od, core_t *cr);
 static uint64_t parse_register(const char *str, core_t *cr);
 static void parse_operand(const char *str, od_t *od, core_t *cr);
+static void parse_operation(const char *op_str, inst_t *inst);
 static void parse_instruction(const char *str, inst_t *inst, core_t *cr);
+
 static uint64_t decode_operand(od_t *od);
 
 static uint64_t decode_operand(od_t *od){
@@ -306,10 +309,118 @@ void parse_operand(const char *str, od_t *od, core_t *cr)
         parse_mem_addr(str, od, cr);
     }
 }
-
+static void parse_operation(const char *op_str, inst_t *inst)
+{
+    if (strcmp(op_str, "mov") == 0 || strcmp(op_str, "movq") == 0)
+    {
+        inst->op = MOV;
+    }
+    else if (strcmp(op_str, "push") == 0)
+    {
+        inst->op = PUSH;
+    }
+    else if (strcmp(op_str, "pop") == 0)
+    {
+        inst->op = POP;
+    }
+    else if (strcmp(op_str, "leaveq") == 0)
+    {
+        inst->op = LEAVE;
+    }
+    else if (strcmp(op_str, "callq") == 0)
+    {
+        inst->op = CALL;
+    }
+    else if (strcmp(op_str, "retq") == 0)
+    {
+        inst->op = RET;
+    }
+    else if (strcmp(op_str, "add") == 0)
+    {
+        inst->op = ADD;
+    }
+    else if (strcmp(op_str, "sub") == 0)
+    {
+        inst->op = SUB;
+    }
+    else if (strcmp(op_str, "cmpq") == 0)
+    {
+        inst->op = CMP;
+    }
+    else if (strcmp(op_str, "jne") == 0)
+    {
+        inst->op = JNE;
+    }
+    else if (strcmp(op_str, "jmp") == 0)
+    {
+        inst->op = JMP;
+    }
+}
 static void parse_instruction(const char *str, inst_t *inst, core_t *cr)
 {
+    char op[64] = {'\0'};
+    int op_len = 0;
+    char od1[64] = {'\0'};
+    int od1_len = 0;
+    char od2[64] = {'\0'};
+    int od2_len = 0;
+    int state = 0;
+    int ca = 0;     // ()
+    for(int i = 0; i < strlen(str); i++)
+    {
+        if(str[i] == '(' || str[i] == ')')
+        {
+            ca++;
+        }
+        if(state == 0 && str[i] != ' ')
+        {
+            state = 1;
+        }
+        else if(state == 1 && str[i] == ' ')
+        {
+            state = 2;
+            continue;
+        }
+        else if(state == 2 && str[i] != ' ')
+        {
+            state = 3;
+        }
+        else if(state == 3)
+        {
+            if((str[i] == ',' && (ca == 0 || ca == 2)) || str[i] == ' ')
+            {
+                state = 4;
+                continue;
+            }
+        }
+        else if(state == 4 && str[i] != ' ' && str[i] != ',')
+        {
+            state = 5;
+        }
+        else if(state == 5 && str[i] == ' ')
+        {
+            state = 6;
+            continue;
+        }
+        
+        if(state == 1)
+        {
+            op[op_len++] = str[i];
+        }
+        else if(state == 3)
+        {
+            od1[od1_len++] = str[i];
+        }
+        else if(state == 5)
+        {
+            od2[od2_len++] = str[i];
+        }
+    }
+    parse_operation(op, inst);
+    parse_operand(od1, &(inst->src), cr);
+    parse_operand(od2, &(inst->dst), cr);
     
+    debug_printf(DEBUG_PARSEINST, "[%s (%d)] [%s (%d)] [%s (%d)]\n", op, inst->op, od1, inst->src.type, od2, inst->dst.type);
 }
 
 static void mov_handler             (od_t *src_od, od_t *dst_od, core_t *cr);
@@ -561,3 +672,33 @@ void TestParsingOperand()
         printf("od scal: %lx\n", od.scal);
     }
 } 
+
+void TestParsingInstruction()
+{
+    ACTIVE_CORE = 0x0;    
+    core_t *ac = (core_t *)&cores[ACTIVE_CORE];
+
+    char assembly[15][MAX_INSTRUCTION_CHAR] = {
+        "push   %rbp",              // 0
+        "mov    %rsp,%rbp",         // 1
+        "mov    %rdi,-0x18(%rbp)",  // 2
+        "mov    %rsi,-0x20(%rbp)",  // 3
+        "mov    -0x18(%rbp),%rdx",  // 4
+        "mov    -0x20(%rbp),%rax",  // 5
+        "add    %rdx,%rax",         // 6
+        "mov    %rax,-0x8(%rbp)",   // 7
+        "mov    -0x8(%rbp),%rax",   // 8
+        "pop    %rbp",              // 9
+        "retq",                     // 10
+        "mov    %rdx,%rsi",         // 11
+        "mov    %rax,%rdi",         // 12
+        "callq  0",                 // 13
+        "mov    %rax,-0x8(%rbp)",   // 14
+    };
+
+    inst_t inst;
+    for (int i = 0; i < 15; ++ i)
+    {
+        parse_instruction(assembly[i], &inst, ac);
+    }
+}

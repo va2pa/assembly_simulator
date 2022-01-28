@@ -9,15 +9,18 @@
 static void TestAddFunctionCallAndComputation();
 static void TestString2Uint();
 void TestParsingOperand();
+void TestParsingInstruction();
 
 void print_register(core_t *cr);
 void print_stack(core_t *cr);
 
+
 int main()
 {
-    TestParsingOperand();
+    TestParsingInstruction();
     return 0;
 }
+
 
 static void TestString2Uint()
 {
