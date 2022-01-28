@@ -5,7 +5,8 @@
 #### 2022/1/28 实现解析指令(包括解析操作码)
 #### 2022/1/28 完成add函数的instruction_cycle()
 #### 2022/1/28 搭建sum递归函数的测试框架，实现指令在内存的存取，rip指向虚拟地址
-#### 2022/1/28 完成sum.c的instruction cycle模拟
+#### 2022/1/28 完成sum.c的instruction cycle模拟  
+实现sub，cmp，jne，jmp，leave指令，并设置cpu标志位
 ---
 ### 第一阶段:汇编指令为inst_t结构
 #### CPU:  
