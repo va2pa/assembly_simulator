@@ -84,22 +84,20 @@ static void TestSumFunctionCallAndComputation()
 
     ac->rip = 0x00400000 + 16 * 0x40;
     // init reg and stack
-    ac->reg.rax = 0x12340000;
+    ac->reg.rax = 0x8000630;
     ac->reg.rbx = 0x0;
-    ac->reg.rcx = 0x555555554660;
-    ac->reg.rdx = 0xabcd;
-    ac->reg.rsi = 0x7fffffffe4f8;
+    ac->reg.rcx = 0x8000650;
+    ac->reg.rdx = 0x7ffffffee328;
+    ac->reg.rsi = 0x7ffffffee318;
     ac->reg.rdi = 0x1;
-    ac->reg.rbp = 0x7fffffffe410;
-    ac->reg.rsp = 0x7fffffffe3f0;
+    ac->reg.rbp = 0x7ffffffee230;
+    ac->reg.rsp = 0x7ffffffee220;
 
-    //init flags
+    ac->flags.flags_value = 0;
 
-    write64bits_dram(va2pa(0x7fffffffe410, ac), 0x555555554660, ac);     //rbp
-    write64bits_dram(va2pa(0x7fffffffe408, ac), 0x0, ac);
-    write64bits_dram(va2pa(0x7fffffffe400, ac), 0xabcd, ac);
-    write64bits_dram(va2pa(0x7fffffffe3f8, ac), 0x12340000, ac);
-    write64bits_dram(va2pa(0x7fffffffe3f0, ac), 0x555555554660, ac);    //rsp
+    write64bits_dram(va2pa(0x7ffffffee230, ac), 0x0000000008000650, ac);    // rbp
+    write64bits_dram(va2pa(0x7ffffffee228, ac), 0x0000000000000000, ac);
+    write64bits_dram(va2pa(0x7ffffffee220, ac), 0x00007ffffffee310, ac);    // rsp
     
     printf("begin\n");
     int time = 0;
@@ -114,25 +112,23 @@ static void TestSumFunctionCallAndComputation()
 
     // verify
     int match = 1;
-    match = match && (ac->reg.rax == 0x1234abcd);
-    match = match && (ac->reg.rbx == 0x0);
-    match = match && (ac->reg.rcx == 0x555555554660);
-    match = match && (ac->reg.rdx == 0x12340000);
-    match = match && (ac->reg.rsi == 0xabcd);
-    match = match && (ac->reg.rdi == 0x12340000);
-    match = match && (ac->reg.rbp == 0x7fffffffe410);
-    match = match && (ac->reg.rsp == 0x7fffffffe3f0);
+    match = match && ac->reg.rax == 0x6;
+    match = match && ac->reg.rbx == 0x0;
+    match = match && ac->reg.rcx == 0x8000650;
+    match = match && ac->reg.rdx == 0x3;
+    match = match && ac->reg.rsi == 0x7ffffffee318;
+    match = match && ac->reg.rdi == 0x0;
+    match = match && ac->reg.rbp == 0x7ffffffee230;
+    match = match && ac->reg.rsp == 0x7ffffffee220;
     if(match){
         printf("register match\n");
     }else{
         printf("register not match\n");
     }
 
-    match = match && (read64bits_dram(va2pa(0x7fffffffe410, ac), ac) == 0x555555554660);     //rbp
-    match = match && (read64bits_dram(va2pa(0x7fffffffe408, ac), ac) == 0x1234abcd);
-    match = match && (read64bits_dram(va2pa(0x7fffffffe400, ac), ac) == 0xabcd);
-    match = match && (read64bits_dram(va2pa(0x7fffffffe3f8, ac), ac) == 0x12340000);
-    match = match && (read64bits_dram(va2pa(0x7fffffffe3f0, ac), ac) == 0x555555554660);     //rsp
+    match = match && (read64bits_dram(va2pa(0x7ffffffee230, ac), ac) == 0x0000000008000650); // rbp
+    match = match && (read64bits_dram(va2pa(0x7ffffffee228, ac), ac) == 0x0000000000000006);
+    match = match && (read64bits_dram(va2pa(0x7ffffffee220, ac), ac) == 0x00007ffffffee310); // rsp
     if(match){
         printf("stack match\n");
     }else{

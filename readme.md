@@ -5,6 +5,7 @@
 #### 2022/1/28 实现解析指令(包括解析操作码)
 #### 2022/1/28 完成add函数的instruction_cycle()
 #### 2022/1/28 搭建sum递归函数的测试框架，实现指令在内存的存取，rip指向虚拟地址
+#### 2022/1/28 完成sum.c的instruction cycle模拟
 ---
 ### 第一阶段:汇编指令为inst_t结构
 #### CPU:  
@@ -37,6 +38,6 @@
 
 #### 2022/1/24 编写调试函数print_register()、print_stack()，实现指令处理mov_reg_reg、call
 
-#### 2022/1/24 实现add.c其余指令push_reg、mov_reg_mem、mov_mem_reg、add_reg_reg、pop_reg、ret，完成add.c简易的instruction_cycle()模拟
+#### 2022/1/24 实现add.c其余指令push_reg、mov_reg_mem、mov_mem_reg、add_reg_reg、pop_reg、ret，完成add.c的instruction cycle模拟
 
 #### 2022/1/25 修改注释：有符号数的存储形式是其补码，其无符号形式就是它的01内存布局

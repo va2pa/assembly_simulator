@@ -539,6 +539,12 @@ static void pop_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 
 static void leave_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
+    // movq %rbp, %rsp
+    // popq %rbp
+    cr->reg.rsp = cr->reg.rbp;
+    cr->reg.rbp = read64bits_dram(va2pa(cr->reg.rsp, cr), cr);
+    cr->reg.rsp += 8;
+    reset_cflags(cr);
 }
 
 static void call_handler(od_t *src_od, od_t *dst_od, core_t *cr)
@@ -572,32 +578,85 @@ static void add_handler(od_t *src_od, od_t *dst_od, core_t *cr)
     uint64_t dst = decode_operand(dst_od);
 
     if(src_od->type == REG && dst_od->type == REG){
-        *(uint64_t *)dst += *(uint64_t *)src;
+        uint64_t val = *(uint64_t *)dst + *(uint64_t *)src;
+
+        uint64_t val_sign = (val >> 63) & 0x1;
+        uint64_t src_sign = (*(uint64_t *)src >> 63) & 0x1;
+        uint64_t dst_sign = (*(uint64_t *)dst >> 63) & 0x1;
+
+        cr->flags.CF = val < *(uint64_t *)src;
+        cr->flags.OF = (src_sign == 0 && dst_sign == 0 && val_sign == 1) ||
+                (src_sign == 1 && dst_sign == 1 && val_sign == 0);
+        cr->flags.SF = val_sign;
+        cr->flags.ZF = val == 0;
+
+        *(uint64_t *)dst = val;
     }
 }
 
 static void sub_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
-    printf("Not Implemented\n");
-    exit(0);
+    uint64_t src = decode_operand(src_od);
+    uint64_t dst = decode_operand(dst_od);
+
+    if(src_od->type == IMM && dst_od->type == REG){
+        uint64_t val = *(uint64_t *)dst + ~src + 1;
+
+        uint64_t val_sign = (val >> 63) & 0x1;
+        uint64_t src_sign = (src >> 63) & 0x1;
+        uint64_t dst_sign = (*(uint64_t *)dst >> 63) & 0x1;
+
+        cr->flags.CF = val > *(uint64_t *)dst;
+        cr->flags.OF = (src_sign == 1 && dst_sign == 0 && val_sign == 1) ||
+                (src_sign == 0 && dst_sign == 1 && val_sign == 0);
+        cr->flags.SF = val_sign;
+        cr->flags.ZF = val == 0;
+
+        *(uint64_t *)dst = val;
+        
+    }
 }
 
 static void cmp_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
-    printf("Not Implemented\n");
-    exit(0);
+    uint64_t src = decode_operand(src_od);
+    uint64_t dst = decode_operand(dst_od);
+
+    if(src_od->type == IMM && dst_od->type == MM_IMM_REG1){
+        uint64_t dst_val = read64bits_dram(va2pa(dst, cr), cr);
+        uint64_t val = dst_val + ~src + 1;
+
+        uint64_t val_sign = (val >> 63) & 0x1;
+        uint64_t src_sign = (src >> 63) & 0x1;
+        uint64_t dst_sign = (dst_val >> 63) & 0x1;
+
+        cr->flags.CF = val > dst_val;
+        cr->flags.OF = (src_sign == 1 && dst_sign == 0 && val_sign == 1) ||
+                (src_sign == 0 && dst_sign == 1 && val_sign == 0);
+        cr->flags.SF = val_sign;
+        cr->flags.ZF = val == 0;
+    }
 }
 
 static void jne_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
-    printf("Not Implemented\n");
-    exit(0);
+    // actually it is a immediate number, but the format is not uniform
+    uint64_t src = decode_operand(src_od);
+    // jump if not zero
+    if(cr->flags.ZF == 0)
+    {
+        cr->rip = src;
+    }
+    reset_cflags(cr);
 }
 
 static void jmp_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
-    printf("Not Implemented\n");
-    exit(0);
+    // actually it is a immediate number, but the format is not uniform
+    uint64_t src = decode_operand(src_od);
+    // jump
+    cr->rip = src;
+    reset_cflags(cr);
 }
 
 void print_register(core_t *cr)
