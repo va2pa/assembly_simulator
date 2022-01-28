@@ -463,7 +463,8 @@ static inline void next_rip(core_t *cr)
 }
 void instruction_cycle(core_t *cr){
     // 取指
-    const char * inst_str = (const char *)cr->rip;
+    char inst_str[MAX_INSTRUCTION_CHAR + 10];
+    readinst_dram(va2pa(cr->rip, cr), inst_str, cr);
     debug_printf(DEBUG_INSTRUCTIONCYCLE, "%lx    %s\n", cr->rip, inst_str);
     next_rip(cr);
 
@@ -475,7 +476,6 @@ void instruction_cycle(core_t *cr){
     //执行
     handler_t handler = handler_table[op];
     handler(&(inst.src), &(inst.dst), cr);
-    
 }
 
 static void mov_handler(od_t *src_od, od_t *dst_od, core_t *cr){
@@ -578,18 +578,26 @@ static void add_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 
 static void sub_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
+    printf("Not Implemented\n");
+    exit(0);
 }
 
 static void cmp_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
+    printf("Not Implemented\n");
+    exit(0);
 }
 
 static void jne_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
+    printf("Not Implemented\n");
+    exit(0);
 }
 
 static void jmp_handler(od_t *src_od, od_t *dst_od, core_t *cr)
 {
+    printf("Not Implemented\n");
+    exit(0);
 }
 
 void print_register(core_t *cr)
